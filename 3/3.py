@@ -11,6 +11,7 @@ def mul(x, y):
 
 def main():
     ans = 0
+    mode = int(input()) # asking what part are we running 
     with open("3.txt") as file:
         activated = True
         for line in file.readlines():
