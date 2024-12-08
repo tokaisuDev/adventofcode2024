@@ -1,54 +1,71 @@
-# if there's an obstacle at (i, j): o[i][j] = True
 o = []
-poss_dirs = [(-1, 0), (0, 1), (1, 0), (0, -1)]
-starting_pos = []
+visited = []
+poss_dirs = [[-1, 0], [0, 1], [1, 0], [0, -1]]
+dir = [-1, 0]
+curr = [-1, -1]
+starting_pos = [-1, -1]
 rows = 0
-def turn(dir):
-    if dir == poss_dirs[0]:
-        return poss_dirs[1]
-    if dir == poss_dirs[1]:
-        return poss_dirs[2]
-    if dir == poss_dirs[2]:
-        return poss_dirs[3]
-    if dir == poss_dirs[3]:
-        return poss_dirs[0]
+obs = []
+turns_cnt = 0
+
 with open("6.txt") as r:
-    lines = r.readlines()
-for i in range(len(lines)):
-    lines[i] = lines[i].rstrip()
-    row = []
-    for j in range(len(lines[i])):
-        if lines[i][j] == "#":
-            row.append(True)
-        else:
-            row.append(False)
-            if lines[i][j] == "^":
-                starting_pos = [i, j]
-    o.append(row)
-rows = len(o)
+    for line in r.readlines():
+        row = []
+        row2 = []
+        cols = 0
+        for char in line.rstrip():
+            row2.append(False)
+            if char == "#":
+                obs.append([rows, cols])
+                row.append(True)
+            else:
+                row.append(False)
+                if char == "^":
+                    curr = [rows, cols]
+                    starting_pos = curr.copy()
+            cols += 1
+        visited.append(row2)
+        o.append(row)
+        rows += 1
 cols = len(o[0])
-def traverse(curr, dir, obs=None):
-    i, j = curr
-    visited = set()
-    v_cdirs = set()
-    v_cdirs.add((i, j, dir))
-    while 0 <= i < rows and 0 <= j < cols:
-        visited.add((i, j))
-        ni, nj = i+dir[0], j+dir[1]
-        if (0 <= ni < rows and 0 <= nj < cols) and (o[ni][nj] or (obs and (ni, nj) == obs)):
-            dir = turn(dir)
-        else:
-            i, j = ni, nj
-        if (i, j, dir) in v_cdirs:
-            return True, visited
-        v_cdirs.add((i, j, dir))
-    return False, visited
-nah, tos = traverse(starting_pos, poss_dirs[0])
-print("Visited:", len(tos))
+mode = int(input("Which half? "))
 ans = 0
-tos = tos - {tuple(starting_pos)}
-for ob in tos:
-    if ob != starting_pos:
-        if traverse(starting_pos, poss_dirs[0], ob)[0]:
-            ans += 1
-print("Possible placements:", ans)
+while 0 <= curr[0] < rows and 0 <= curr[1] < cols:
+    if not visited[curr[0]][curr[1]]:
+        ans += 1
+        visited[curr[0]][curr[1]] = True
+    next = [curr[0]+dir[0], curr[1]+dir[1]]
+    if 0 <= next[0] < rows and 0 <= next[1] < cols:
+        if (o[next[0]][next[1]]):
+            turns_cnt += 1
+            dir = poss_dirs[turns_cnt % 4]
+    curr = [curr[0]+dir[0], curr[1]+dir[1]]
+res = 0
+
+for i in range(rows):
+    for j in range(cols):
+        if not o[i][j] and [i, j] != starting_pos:
+            o[i][j] = True
+            v = set()
+            curr = starting_pos
+            dir = poss_dirs[0]
+            cnt = 0
+            loop = False
+            while 0 <= curr[0] < rows and 0 <= curr[1] < cols:
+                next = [curr[0]+dir[0], curr[1]+dir[1]]
+                if 0 <= next[0] < rows and 0 <= next[1] < cols and o[next[0]][next[1]]:
+                    cnt += 1
+                    dir = poss_dirs[cnt % 4]
+                else:
+                    curr = next
+                if tuple(curr+dir) in v:
+                    loop = True
+                    break
+                else:
+                    v.add(tuple(curr+dir))
+            if loop:
+                res += 1
+if mode == 1:
+    print(ans)
+elif mode == 2:
+    print(res)
